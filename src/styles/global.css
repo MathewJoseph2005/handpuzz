@@ -1,0 +1,33 @@
+:root {
+  font-family: 'Cascadia Mono', 'Segoe UI Mono', 'Courier New', monospace;
+  color: #c4d8ce;
+  background: #070b0c;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
