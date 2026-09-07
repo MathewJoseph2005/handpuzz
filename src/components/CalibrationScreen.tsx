@@ -1,14 +1,48 @@
+import { useEffect, useRef, type RefObject } from 'react';
+import { createCalibrateView, disposeCalibrateView, startCalibrationView } from '../rendering/calibrateView';
+import { BackButton } from './BackButton';
+
 type CalibrationScreenProps = {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement>;
   onContinueFallback: () => void;
+  onLocked: () => void;
+  onBack: () => void;
 };
 
-export function CalibrationScreen({ videoRef, onContinueFallback }: CalibrationScreenProps) {
+export function CalibrationScreen({ videoRef, onContinueFallback, onLocked, onBack }: CalibrationScreenProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const calibrateViewRef = useRef<Awaited<ReturnType<typeof createCalibrateView>> | null>(null);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (initializedRef.current || !canvasRef.current || !videoRef.current) return;
+    initializedRef.current = true;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+
+    createCalibrateView(canvas, video).then((view) => {
+      calibrateViewRef.current = view;
+      startCalibrationView(view, onLocked);
+    }).catch((error) => {
+      console.error('Failed to initialize calibration view:', error);
+      onContinueFallback();
+    });
+
+    return () => {
+      if (calibrateViewRef.current) {
+        disposeCalibrateView(calibrateViewRef.current);
+        calibrateViewRef.current = null;
+      }
+    };
+  }, [videoRef, onLocked, onContinueFallback]);
+
   return (
     <main className="terminal-shell calibration-shell">
       <div className="atmosphere" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
+      <BackButton onBack={onBack} />
 
       <header className="hud-corner hud-corner--top-left">
         <span className="hud-kicker">OPTICAL SENSOR / CALIBRATION</span>
@@ -31,17 +65,14 @@ export function CalibrationScreen({ videoRef, onContinueFallback }: CalibrationS
 
         <div className="camera-stage">
           <video ref={videoRef} autoPlay playsInline muted className="camera-stage__video" />
-          <div className="reticle reticle--top-left" />
-          <div className="reticle reticle--top-right" />
-          <div className="reticle reticle--bottom-left" />
-          <div className="reticle reticle--bottom-right" />
-          <span className="camera-stage__label">LIVE / MIRRORED / LOCAL</span>
+          <canvas ref={canvasRef} className="camera-stage__canvas" />
+          <span className="camera-stage__label">LIVE / MIRRORED / LOCAL / HAND TRACKING</span>
         </div>
 
         <div className="calibration-readout">
-          <span><i className="status-dot" /> AWAITING LANDMARK INPUT</span>
-          <span>HAND COUNT <b>--</b></span>
-          <span>CONFIDENCE <b>--</b></span>
+          <span><i className="status-dot" /> HAND DETECTION ACTIVE</span>
+          <span>RAISE BOTH HANDS TO LOCK</span>
+          <span>TRACKING <b>LIVE</b></span>
         </div>
 
         <button className="text-button" type="button" onClick={onContinueFallback}>

@@ -8,6 +8,10 @@ type Diagnostic = {
   state: DiagnosticState;
 };
 
+type BootScreenProps = {
+  onInitialize: () => void;
+};
+
 const initialDiagnostics: Diagnostic[] = [
   { label: 'NEURAL INTERFACE', value: 'ONLINE', state: 'online' },
   { label: 'OPTICAL SENSOR', value: 'ONLINE', state: 'online' },
@@ -16,7 +20,7 @@ const initialDiagnostics: Diagnostic[] = [
   { label: 'CONNECTION', value: 'SECURE', state: 'online' },
 ];
 
-export function BootScreen() {
+export function BootScreen({ onInitialize }: BootScreenProps) {
   const [revealedCount, setRevealedCount] = useState(0);
   const [initialized, setInitialized] = useState(false);
 
@@ -30,7 +34,7 @@ export function BootScreen() {
 
   const handleInitialize = () => {
     setInitialized(true);
-    window.setTimeout(() => setInitialized(false), 1400);
+    onInitialize();
   };
 
   return (
